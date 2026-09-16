@@ -25,14 +25,14 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "cwl2ogc @ git+https://github.com/eoap/cwl2ogc.git@transpiler-mate-plugin",
+  "cwl2ogc>=0.20.0",
   "jsonschema==4.26.0",
   "loguru==0.7.3",
   "pygeofilter[backend-native]>=0.4.0,<1",
   "regopy>=1.5.2",
   "requests>=2.34.2",
   "eoap-problems-registry>=1.5.0",
-  "transpiler-mate-api @ git+https://github.com/sim13pods/transpiler-mate-api.git@main",
+  "transpiler-mate-api==1.0.0",
 ]
 
 # TODO remove me as soon as transpiler-mate-api is on PyPI
