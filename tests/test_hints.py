@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cwl_utils.parser.cwl_v1_2 import Workflow, WorkflowInputParameter
+
 from assertions_mate import Cql2FilterHint, JSONSchemaHint, extract_assertion_hints
 
 
@@ -61,3 +63,55 @@ def test_extract_assertion_hints_ignores_unknown_or_non_mapping_hints():
     hints = extract_assertion_hints(workflow)
 
     assert hints == []
+
+
+def test_explicit_json_schema_is_used_with_parent_workflow():
+    schema = {
+        "type": "object",
+        "properties": {"count": {"type": "integer", "minimum": 1}},
+    }
+    workflow = DummyWorkflow(
+        hints=[{"class": "eoap:JSONSchemaHint", "json_schema": schema}]
+    )
+    hint = extract_assertion_hints(workflow)[0]
+
+    assert hint.model_dump() == schema
+    validator = hint.validator()
+    assert validator.validate_inputs({"count": 1}) is None
+    result = validator.validate_inputs({"count": 0})
+    assert result is not None
+    assert "minimum" in result.errors[0].detail
+
+
+def test_explicit_empty_json_schema_is_preserved():
+    hint = JSONSchemaHint(parent_workflow=DummyWorkflow([]), json_schema={})
+
+    assert hint.model_dump() == {}
+    assert hint.validator().validate_inputs({"anything": None}) is None
+
+
+def test_missing_json_schema_is_generated_from_workflow():
+    workflow = Workflow(
+        id="file:///tmp/workflow.cwl#main",
+        cwlVersion="v1.2",
+        inputs=[
+            WorkflowInputParameter(
+                id="file:///tmp/workflow.cwl#main/count", type_="int"
+            )
+        ],
+        outputs=[],
+        steps=[],
+    )
+    hint = JSONSchemaHint(parent_workflow=workflow)
+
+    assert "count" in hint.model_dump()["properties"]
+    validator = hint.validator()
+    assert validator.validate_inputs({"count": 1}) is None
+    assert validator.validate_inputs({"count": "wrong"}) is not None
+
+
+def test_missing_json_schema_without_workflow_accepts_any_object():
+    hint = JSONSchemaHint()
+
+    assert hint.model_dump() == {}
+    assert hint.validator().validate_inputs({"anything": None}) is None

@@ -13,12 +13,16 @@
 # limitations under the License.
 
 from pathlib import Path
+from types import SimpleNamespace
 
+import pytest
 from cwl_utils.parser import load_document_by_uri
 from ruamel.yaml import YAML
+from transpiler_mate.api import PluginFailureError
 
 from assertions_mate import Cql2FilterHint, Cql2Query, extract_assertion_hints
-from assertions_mate.cql2_validator import Cql2Validator
+from assertions_mate.cql2_validator import Cql2EvaluationError, Cql2Validator
+from assertions_mate.plugin import _scan_workflow
 
 
 def test_validate_inputs_reports_business_rule_violation_when_predicate_fails():
@@ -70,6 +74,8 @@ def test_validate_inputs_executes_ensure_bbox_custom_function_from_cwl_hint():
         path=example_dir / "workflow.cwl",
         load_all=True,
     )
+    if isinstance(workflow, list):
+        workflow = workflow[0]
     hints = [
         hint
         for hint in extract_assertion_hints(workflow)
@@ -100,3 +106,83 @@ def test_validate_inputs_executes_ensure_bbox_custom_function_from_cwl_hint():
     assert len(result.errors) == 1
     assert result.errors[0].pointer == "bbox-overlap"
     assert result.errors[0].detail == "bbox_1 must overlap bbox_2"
+
+
+@pytest.mark.parametrize("data", [{}, {"aoi": None}])
+def test_polygon_missing_aoi_reports_only_presence_violation(data):
+    path = (
+        Path(__file__).resolve().parents[1] / "examples/polygon-validation/workflow.cwl"
+    )
+    workflow = YAML().load(path)["$graph"][0]
+    hint = Cql2FilterHint(**workflow["hints"][0])
+
+    result = hint.validator().validate_inputs(data)
+
+    assert result is not None
+    assert [(error.pointer, error.detail) for error in result.errors] == [
+        ("aoi-present", "aoi must be provided")
+    ]
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        ({"aoi": {"type": "Polygon", "bbox": [0, 0, 1, 1]}}, []),
+        (
+            {"aoi": {"type": "Point", "bbox": [0, 0, 1, 1]}},
+            ["aoi.type must be Polygon"],
+        ),
+        ({"aoi": {"type": "Polygon"}}, ["aoi.bbox must be provided"]),
+    ],
+)
+def test_polygon_non_null_rules_still_validate(data, expected):
+    path = (
+        Path(__file__).resolve().parents[1] / "examples/polygon-validation/workflow.cwl"
+    )
+    hint = Cql2FilterHint(**YAML().load(path)["$graph"][0]["hints"][0])
+
+    result = hint.validator().validate_inputs(data)
+
+    assert ([error.detail for error in result.errors] if result else []) == expected
+
+
+def test_custom_function_failure_is_not_a_business_rule_violation():
+    validator = Cql2Validator(
+        queries=[
+            Cql2Query(
+                id="broken-rule", cql2="broken(count) = 1", message="Invalid count"
+            )
+        ],
+        custom_functions="def broken(value):\n    raise ValueError('internal detail')",
+    )
+
+    with pytest.raises(Cql2EvaluationError) as caught:
+        validator.validate_inputs({"count": 1})
+
+    assert str(caught.value) == "Could not evaluate rule 'broken-rule'"
+    assert isinstance(caught.value.__cause__, ValueError)
+
+
+def test_plugin_reports_evaluation_failure_without_success():
+    workflow = SimpleNamespace(
+        id="file:///tmp/workflow.cwl#main",
+        class_="Workflow",
+        cwlVersion="v1.2",
+        hints=[
+            {
+                "class": "eoap:Cql2FilterHint",
+                "queries": [
+                    {
+                        "id": "broken-rule",
+                        "cql2": "aoi.type = 'Polygon'",
+                        "message": "Invalid AOI",
+                    }
+                ],
+            }
+        ],
+    )
+
+    with pytest.raises(
+        PluginFailureError, match="Could not evaluate rule 'broken-rule'"
+    ):
+        _scan_workflow(workflow, {"aoi": None})
