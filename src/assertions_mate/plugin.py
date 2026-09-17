@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
 
 from cwl_utils.parser import Process, Workflow
@@ -21,6 +22,7 @@ from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field
 from ruamel.yaml import YAML
 from transpiler_mate.api import (
+    PluginFailureError,
     transpiler_plugin,
 )
 
@@ -28,7 +30,6 @@ from . import extract_assertion_hints
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from pathlib import Path
 
     from transpiler_mate.api import TranspilerContext
 
@@ -68,14 +69,17 @@ def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
         for validator in validators:
             logger.info(f"  - Executing {type(validator).__name__}...")
 
-            problem_details = validator.validate_inputs(inputs)
+            try:
+                problem_details = validator.validate_inputs(inputs)
+            except Exception as exc:
+                raise PluginFailureError(str(exc)) from exc
             if problem_details:
-                logger.error(
+                logger.warning(
                     f"    {type(validator).__name__} detected violations below:"
                 )
 
                 for error_detail in problem_details.errors or []:
-                    logger.error(f"    [{error_detail.pointer}] {error_detail.detail}")
+                    logger.warning(f"    [{error_detail.pointer}] {error_detail.detail}")
             else:
                 logger.info(
                     f"    {type(validator).__name__} execution terminated with no violations"
