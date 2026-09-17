@@ -36,9 +36,9 @@ dependencies = [
 ]
 
 [project.urls]
-Documentation = "https://terradue.github.io/assertions-mate/"
-Issues = "https://github.com/Terradue/assertions-mate/issues"
-Source = "https://github.com/Terradue/assertions-mate"
+Documentation = "https://Transpiler-Mate.github.io/assertions-mate/"
+Issues = "https://github.com/Transpiler-Mate/assertions-mate/issues"
+Source = "https://github.com/Transpiler-Mate/assertions-mate"
 
 [project.entry-points."transpiler_mate.plugins"]
 assertions-mate = "assertions_mate.plugin:assertions_mate"
