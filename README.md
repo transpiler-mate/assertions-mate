@@ -39,10 +39,19 @@ pip install -e .
 
 ## Command Line Usage
 
+> [!NOTE]
+> Since release **0.10.0**, `assertions-mate` is a transpiler-mate plugin.
+> The standalone command was removed; use `transpiler-mate assertions-mate`.
+> The Python library remains available.
+
+```bash
+pip install transpiler-mate-runtime "assertions-mate>=0.10.0"
+```
+
 After installation, run:
 
 ```bash
-assertions-mate path/to/workflow.cwl --inputs path/to/inputs.yaml
+transpiler-mate assertions-mate --inputs path/to/inputs.yaml path/to/workflow.cwl
 ```
 
 What happens:

@@ -17,3 +17,4 @@ src/assertions_mate/__pycache__
 .vscode
 .mypy_cache
 uv.lock
+.cache

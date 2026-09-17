@@ -21,6 +21,7 @@ from eoap_problems_registry import (
     ErrorDetail,
     ProblemDetails,
 )
+from loguru import logger
 from pygeofilter.backends.native.evaluate import (  # type: ignore[import-untyped]
     NativeEvaluator,
 )
@@ -49,6 +50,10 @@ def _to_builtin(value: Any) -> Any:
     if isinstance(value, Real):
         return float(value)
     return value
+
+
+class Cql2EvaluationError(RuntimeError):
+    """A rule could not be evaluated, rather than evaluating to false."""
 
 
 class Cql2Validator(BaseValidator):
@@ -99,12 +104,20 @@ class Cql2Validator(BaseValidator):
                 )
 
             if ast:
-                predicate = self.evaluator.evaluate(ast)
+                try:
+                    predicate = self.evaluator.evaluate(ast)
 
-                if not predicate(data):
-                    errors_list.append(
-                        ErrorDetail(pointer=filter.id, detail=filter.message)
+                    if not predicate(data):
+                        errors_list.append(
+                            ErrorDetail(pointer=filter.id, detail=filter.message)
+                        )
+                except Exception as e:
+                    logger.opt(exception=True).debug(
+                        "Failed to evaluate CQL2 rule '{}'", filter.id
                     )
+                    raise Cql2EvaluationError(
+                        f"Could not evaluate rule '{filter.id}'"
+                    ) from e
 
         if errors_list:
             return BusinessRuleViolation(errors=errors_list)

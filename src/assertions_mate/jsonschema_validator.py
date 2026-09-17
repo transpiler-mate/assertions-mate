@@ -30,9 +30,6 @@ from referencing import Resource
 from referencing.exceptions import NoSuchResource
 from referencing.jsonschema import DRAFT202012
 from ruamel.yaml import YAML
-from session_adapters.file_adapter import FileAdapter  # type: ignore[import-untyped]
-from session_adapters.oci_adapter import OCIAdapter  # type: ignore[import-untyped]
-from session_adapters.s3_adapter import S3Adapter  # type: ignore[import-untyped]
 
 from . import BaseValidator
 
@@ -46,9 +43,6 @@ class JSONSchemaRegistry:
     ):
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": "assertions-mate"})
-        self.session.mount("file://", FileAdapter())
-        self.session.mount("s3://", S3Adapter())
-        self.session.mount("oci://", OCIAdapter())
         self.timeout = timeout
 
     @staticmethod

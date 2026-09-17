@@ -40,7 +40,8 @@ class RegoValidator(BaseValidator):
                 if not exprs:  # safety check
                     continue
 
-                errors_list.append(ErrorDetail(pointer=query, detail=exprs[0]))
+                for expr in exprs:
+                    errors_list.append(ErrorDetail(pointer=query, detail=str(expr)))
 
         if errors_list:
             return BusinessRuleViolation(errors=errors_list)

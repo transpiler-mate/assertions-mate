@@ -53,23 +53,19 @@ class JSONSchemaHint(AssertionHint):
     def annotation(self) -> str:
         return JSONSchemaHint.get_annotation_name()
 
+    def _get_schema(self) -> Mapping[str, Any]:
+        if "json_schema" in self.model_fields_set or self.parent_workflow is None:
+            return self.json_schema
+        return BaseCWLtypes2OGCConverter(self.parent_workflow).get_inputs_json_schema()
+
     @model_serializer
     def ser_model(self) -> Mapping[str, Any]:
-        return (
-            BaseCWLtypes2OGCConverter(self.parent_workflow).get_inputs_json_schema()
-            if self.parent_workflow is not None
-            else self.json_schema
-        )
+        return self._get_schema()
 
     def validator(self) -> BaseValidator:
         from .jsonschema_validator import JSONSchemaValidator
 
-        schema = (
-            BaseCWLtypes2OGCConverter(self.parent_workflow).get_inputs_json_schema()
-            if self.parent_workflow is not None
-            else self.json_schema
-        )
-        return JSONSchemaValidator(schema=schema)
+        return JSONSchemaValidator(schema=self._get_schema())
 
 
 class RegoPolicyHint(AssertionHint):
