@@ -92,11 +92,11 @@ def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
 
 @transpiler_plugin(
     name="assertions-mate",
-    description="{{ project_description }}",
+    description="Scan, detect and perform all JSONSchemaHint/RegoPolicyHint/Cql2FilterHint for all Workflows declared in the CWL, against the inputs",
     options_model=AssertionsMateOptions,
 )
 def assertions_mate(context: TranspilerContext, options: AssertionsMateOptions) -> None:
-    """{{ project_description }}"""
+    """Scan, detect and perform all JSONSchemaHint/RegoPolicyHint/Cql2FilterHint for all Workflows declared in the CWL, against the inputs"""
     logger.info(f"Loading inputs from {options.inputs.absolute()}")
 
     with options.inputs.open() as input_stream:
