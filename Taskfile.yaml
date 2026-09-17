@@ -27,32 +27,34 @@ tasks:
     desc: "Run every example"
     cmds:
       - |
-        set -euo pipefail
-        status=0
+        uv run --no-project --with transpiler-mate-runtime --with-editable . bash -c '
+          set -euo pipefail
+          status=0
 
-        for example_dir in examples/*/; do
-          workflow="${example_dir}workflow.cwl"
+          for example_dir in examples/*/; do
+            workflow="${example_dir}workflow.cwl"
 
-          if [ -f "${workflow}" ]; then
-            for inputs in "${example_dir}"inputs-*.yaml; do
-              echo "Running ${workflow} with ${inputs}"
-              if ! hatch run assertions-mate "${workflow}" --inputs "${inputs}"; then
-                status=1
+            if [ -f "${workflow}" ]; then
+              for inputs in "${example_dir}"inputs-*.yaml; do
+                echo "Running ${workflow} with ${inputs}"
+                if ! transpiler-mate assertions-mate --inputs "${inputs}" "${workflow}"; then
+                  status=1
+                fi
+              done
+            fi
+
+            for test_file in "${example_dir}"test_*.py; do
+              if [ -f "${test_file}" ]; then
+                echo "Running ${test_file}"
+                if ! hatch run test:pytest -q "${test_file}"; then
+                  status=1
+                fi
               fi
             done
-          fi
-
-          for test_file in "${example_dir}"test_*.py; do
-            if [ -f "${test_file}" ]; then
-              echo "Running ${test_file}"
-              if ! hatch run test:pytest -q "${test_file}"; then
-                status=1
-              fi
-            fi
           done
-        done
 
-        exit "${status}"
+          exit "${status}"
+        '
 
   generate_schema_doc:
     cmds:
