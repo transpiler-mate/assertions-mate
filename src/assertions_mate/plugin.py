@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Register the Assertions Mate plugin and run validation for CWL workflows."""
+
 from __future__ import annotations
 
 from pathlib import Path  # noqa: TC003 — Pydantic resolves this type at runtime
@@ -35,6 +37,14 @@ if TYPE_CHECKING:
 
 
 class AssertionsMateOptions(BaseModel):
+    """Options accepted by the Assertions Mate plugin.
+
+    Attributes:
+        inputs: Path to the YAML or JSON document containing workflow inputs.
+
+    Unknown option fields are rejected.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     inputs: Annotated[
@@ -44,6 +54,18 @@ class AssertionsMateOptions(BaseModel):
 
 
 def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
+    """Build a process's hint validators and log their validation results.
+
+    Args:
+        wf: Parsed CWL process whose assertion hints should be evaluated.
+        inputs: Input mapping supplied to every configured validator.
+
+    Raises:
+        PluginFailureError: If a validator raises during input validation.
+
+    Validator construction failures are logged and skipped. Returned violations
+    are logged as warnings and do not raise an exception.
+    """
     logger.info(
         "------------------------------------------------------------------------"
     )
@@ -96,7 +118,19 @@ def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
     options_model=AssertionsMateOptions,
 )
 def assertions_mate(context: TranspilerContext, options: AssertionsMateOptions) -> None:
-    """Scan, detect and perform all JSONSchemaHint/RegoPolicyHint/Cql2FilterHint for all Workflows declared in the CWL, against the inputs"""
+    """Validate inputs against assertion hints on every workflow in the context.
+
+    Args:
+        context: Transpiler context providing the parsed CWL workflows.
+        options: Plugin options identifying the input document to load.
+
+    Raises:
+        PluginFailureError: If a validator raises during input validation.
+        OSError: If the input document cannot be opened or read.
+
+    The same YAML-loaded input mapping is passed to each workflow. Document
+    parsing errors propagate; returned validation violations are logged.
+    """
     logger.info(f"Loading inputs from {options.inputs.absolute()}")
 
     with options.inputs.open() as input_stream:
