@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path  # noqa: TC003 — Pydantic resolves this type at runtime
 from typing import TYPE_CHECKING, Annotated, Any
 
 from cwl_utils.parser import Process, Workflow
@@ -79,7 +79,9 @@ def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
                 )
 
                 for error_detail in problem_details.errors or []:
-                    logger.warning(f"    [{error_detail.pointer}] {error_detail.detail}")
+                    logger.warning(
+                        f"    [{error_detail.pointer}] {error_detail.detail}"
+                    )
             else:
                 logger.info(
                     f"    {type(validator).__name__} execution terminated with no violations"

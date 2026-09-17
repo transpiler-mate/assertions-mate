@@ -19,8 +19,9 @@ from ruamel.yaml import YAML
 
 from assertions_mate.rego_validator import RegoValidator
 
-
-EXAMPLE_DIR = Path(__file__).resolve().parents[1] / "examples/required-property-validation"
+EXAMPLE_DIR = (
+    Path(__file__).resolve().parents[1] / "examples/required-property-validation"
+)
 
 
 @pytest.fixture
