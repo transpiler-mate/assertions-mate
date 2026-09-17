@@ -30,6 +30,8 @@ Hints let these constraints travel with workflow definitions and be checked cons
 
 This model favors operational continuity and progressive validation.
 
+![Flow Diagram](../diagrams/out/flow.png "Flow Diagram")
+
 ## Validator Model
 
 Each hint type is responsible for producing a validator via `.validator()`.
@@ -53,11 +55,15 @@ Implications:
 - Rego: policy-oriented queries and rich rule composition
 - CQL2: declarative predicate checks, including geospatial expressions
 
+![Class Diagram](../diagrams/out/class.png "Class Diagram")
+
 ## Reliability Tradeoffs
 
 - Strength: multi-validator execution can still produce useful checks when one hint fails setup.
 - Tradeoff: setup errors and runtime backend constraints may reduce total coverage for a given run.
 - Practical guidance: treat logs as part of the contract and monitor setup failures explicitly in CI.
+
+![Sequence Diagram](../diagrams/out/sequence.png "Sequence Diagram")
 
 ## Known Gaps and Improvement Areas
 
