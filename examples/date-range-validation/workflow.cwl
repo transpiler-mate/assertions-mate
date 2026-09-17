@@ -13,81 +13,157 @@
 # limitations under the License.
 
 cwlVersion: v1.2
-class: Workflow
-id: date-range-validation
-label: Date Range Validation
-doc: Validate that end-date is greater than start-date.
-requirements:
-  - class: SchemaDefRequirement
-    types:
-      - $import: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml
-inputs:
-  start-date:
-    type: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml#DateTime
-    
-  end-date:
-    type: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml#DateTime
 
-outputs: {}
-steps: {}
-hints:
-  - class: eoap:RegoPolicyHint
-    module: |
-      package workflow
+$namespaces:
+  s: https://schema.org/
+'@type': s:SoftwareApplication
+s:name: 'My shiny workflow'
+s:description: 'There is no workflow on earth like this one that solves NP-complete problems.'
+s:dateCreated: '2025-01-01'
+s:license:
+  '@type': s:CreativeWork
+  s:identifier: CC-BY-4.0
+  s:name: 'Creative Commons Attribution 4.0 International'
+  s:url: https://spdx.org/licenses/CC-BY-4.0.html
+s:identifier: 10.5072/zenodo.393958
+s:sameAs: https://handle.test.datacite.org/10.5072/zenodo.393958
+s:keywords:
+  - CWL
+  - Workflow
+  - 'Earth Observation'
+  - '@type': s:DefinedTerm
+    s:name: application-type
+    s:description: delineation
+  - '@type': s:DefinedTerm
+    s:name: domain
+    s:description: hydrology
+  - '@type': s:DefinedTerm
+    s:name: 'SURFACE WATER FEATURES'
+    s:description: 'EARTH SCIENCE > TERRESTRIAL HYDROSPHERE > SURFACE WATER > SURFACE WATER FEATURES'
+    s:termCode: 959f1861-a776-41b1-ba6b-d23c71d4d1eb
+    s:inDefinedTermSet: https://cmr.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords
+s:softwareRequirements:
+  - https://cwltool.readthedocs.io/en/latest/
+  - https://www.python.org/
+s:softwareVersion: 3.0.0
+s:softwareHelp:
+  - '@type': s:CreativeWork
+    s:name: 'User Manual'
+    s:url: https://meoga-shiny-workflow.readthedocs.io/en/latest/
+  - '@type': s:CreativeWork
+    s:name: 'Admin Manual'
+    s:url: https://meoga.io/meoga/shiny-workflow/admin
+s:publisher:
+  '@type': s:Organization
+  s:name: 'Make Earth Observation Great Again'
+  s:email: 'info@meoga.com'
+  s:identifier: https://ror.org/9999cx000
+s:author:
+  - '@type': s:Role
+    s:roleName: Conceptualization
+    s:startDate: '2025-01-01'
+    s:additionalType: https://credit.niso.org/contributor-roles/conceptualization/
+    s:author:
+      '@type': s:Person
+      s:givenName: Lex
+      s:familyName: Luthor
+      s:email: 'lex.luthor@luthorcorp.com'
+      s:identifier: https://orcid.org/0000-9999-0000-9999
+      s:affiliation:
+        '@type': s:Organization
+        s:name: 'Luthor Corp'
+        s:identifier: https://ror.org/0000cx000
+s:contributor:
+  - '@type': s:Role
+    s:roleName: 'Writing – review & editing'
+    s:additionalType: https://credit.niso.org/contributor-roles/writing-review-editing/
+    s:contributor:
+      '@type': s:Person
+      s:givenName: Clark
+      s:familyName: Kent
+      s:email: 'clark.kent@dailyplanet.com'
+      s:identifier: https://orcid.org/0000-9999-0000-9999
+      s:affiliation:
+        '@type': s:Organization
+        s:name: 'Daily Planet'
+        s:identifier: https://ror.org/0000cx000
 
-      deny[msg] {
-        input["start-date"] == null
-        msg := "start-date must be provided"
-      }
+$graph:
+  - class: Workflow
+    id: date-range-validation
+    label: Date Range Validation
+    doc: Validate that end-date is greater than start-date.
+    requirements:
+      - class: SchemaDefRequirement
+        types:
+          - $import: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml
+    inputs:
+      start-date:
+        type: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml#DateTime
 
-      deny[msg] {
-        sd := input["start-date"]
-        sd != null
-        sd["value"] == null
-        msg := "start-date.value must be provided"
-      }
+      end-date:
+        type: https://raw.githubusercontent.com/eoap/schemas/main/string_format.yaml#DateTime
 
-      deny[msg] {
-        input["end-date"] == null
-        msg := "end-date must be provided"
-      }
+    outputs: {}
+    steps: {}
+    hints:
+      - class: eoap:RegoPolicyHint
+        module: |
+          package workflow
 
-      deny[msg] {
-        ed := input["end-date"]
-        ed != null
-        ed["value"] == null
-        msg := "end-date.value must be provided"
-      }
+          deny[msg] {
+            input["start-date"] == null
+            msg := "start-date must be provided"
+          }
 
-      deny[msg] {
-        sd := input["start-date"]
-        sd != null
-        s := sd["value"]
-        s != null
-        not regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", s)
-        msg := "start-date must be UTC RFC3339 like YYYY-MM-DDTHH:MM:SSZ"
-      }
+          deny[msg] {
+            sd := input["start-date"]
+            sd != null
+            sd["value"] == null
+            msg := "start-date.value must be provided"
+          }
 
-      deny[msg] {
-        ed := input["end-date"]
-        ed != null
-        e := ed["value"]
-        e != null
-        not regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", e)
-        msg := "end-date must be UTC RFC3339 like YYYY-MM-DDTHH:MM:SSZ"
-      }
+          deny[msg] {
+            input["end-date"] == null
+            msg := "end-date must be provided"
+          }
 
-      deny[msg] {
-        sd := input["start-date"]
-        ed := input["end-date"]
-        sd != null
-        ed != null
-        s := sd["value"]
-        e := ed["value"]
-        regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", s)
-        regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", e)
-        e <= s
-        msg := "end-date must be greater than start-date"
-      }
-    queries:
-      - data.workflow.deny[_]
+          deny[msg] {
+            ed := input["end-date"]
+            ed != null
+            ed["value"] == null
+            msg := "end-date.value must be provided"
+          }
+
+          deny[msg] {
+            sd := input["start-date"]
+            sd != null
+            s := sd["value"]
+            s != null
+            not regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", s)
+            msg := "start-date must be UTC RFC3339 like YYYY-MM-DDTHH:MM:SSZ"
+          }
+
+          deny[msg] {
+            ed := input["end-date"]
+            ed != null
+            e := ed["value"]
+            e != null
+            not regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", e)
+            msg := "end-date must be UTC RFC3339 like YYYY-MM-DDTHH:MM:SSZ"
+          }
+
+          deny[msg] {
+            sd := input["start-date"]
+            ed := input["end-date"]
+            sd != null
+            ed != null
+            s := sd["value"]
+            e := ed["value"]
+            regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", s)
+            regex.match("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$", e)
+            e <= s
+            msg := "end-date must be greater than start-date"
+          }
+        queries:
+          - data.workflow.deny[_]

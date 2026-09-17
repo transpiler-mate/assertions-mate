@@ -13,10 +13,10 @@
 # limitations under the License.
 
 site_name: Assertions Mate
-# site_url: not available
+site_url: https://Transpiler-Mate.github.io/assertions-mate/
 site_author: Fabrice Brito, Simone Tripodi
-repo_url: https://github.com/Terradue/assertions-mate/
-repo_name: Terradue/assertions-mate
+repo_url: https://github.com/Transpiler-Mate/assertions-mate/
+repo_name: Transpiler-Mate/assertions-mate
 
 theme:
   logo: imgs/icon-eoap.png
@@ -36,6 +36,10 @@ theme:
 
 plugins:
 - search
+- mkdocstrings:
+    handlers:
+      python:
+        paths: [src]
 - mermaid2:
     version: 11.4.1
 - mkdocs-jupyter:
@@ -127,6 +131,7 @@ nav:
     - Schema: reference/hints_schema.html
   - Runtime Compatibility: reference/runtime-compatibility.md
   - Errors: reference/errors.md
+  - APIs: reference/api.md
 - Explanation:
   - Architecture: explanation/architecture.md
   - Compatibility and Limitations: explanation/compatibility-and-limitations.md

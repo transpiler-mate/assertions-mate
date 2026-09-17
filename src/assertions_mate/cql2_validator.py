@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Evaluate CQL2 Text and JSON assertions against workflow input mappings."""
+
 from collections.abc import Mapping
 from numbers import Integral, Real
 from typing import Any
@@ -21,6 +23,7 @@ from eoap_problems_registry import (
     ErrorDetail,
     ProblemDetails,
 )
+from loguru import logger
 from pygeofilter.backends.native.evaluate import (  # type: ignore[import-untyped]
     NativeEvaluator,
 )
@@ -51,8 +54,21 @@ def _to_builtin(value: Any) -> Any:
     return value
 
 
+class Cql2EvaluationError(RuntimeError):
+    """A rule could not be evaluated, rather than evaluating to false."""
+
+
 class Cql2Validator(BaseValidator):
+    """Validate workflow inputs with CQL2 predicates and optional Python functions."""
+
     def __init__(self, queries: list[Cql2Query], custom_functions: str | None = None):
+        """Initialize the native evaluator and retain the configured queries.
+
+        Args:
+            queries: Rules to evaluate against each input mapping.
+            custom_functions: Trusted Python source executed immediately to populate
+                the evaluator function map. Exceptions from this code propagate.
+        """
         function_map: dict[str, Any] = {}
 
         if custom_functions:
@@ -65,6 +81,19 @@ class Cql2Validator(BaseValidator):
         self.queries = queries
 
     def validate_inputs(self, data: Mapping[str, Any]) -> ProblemDetails | None:
+        """Evaluate every configured CQL2 rule against the inputs.
+
+        Args:
+            data: Workflow input names mapped to their values.
+
+        Returns:
+            BusinessRuleViolation for malformed rules or false predicates, or None
+            when all rules pass. Error pointers identify the corresponding rules.
+
+        Raises:
+            Cql2EvaluationError: If a parsed rule cannot be compiled or evaluated.
+                Processing stops at that rule rather than returning a violation.
+        """
         errors_list = []
 
         for filter in self.queries:
@@ -99,12 +128,20 @@ class Cql2Validator(BaseValidator):
                 )
 
             if ast:
-                predicate = self.evaluator.evaluate(ast)
+                try:
+                    predicate = self.evaluator.evaluate(ast)
 
-                if not predicate(data):
-                    errors_list.append(
-                        ErrorDetail(pointer=filter.id, detail=filter.message)
+                    if not predicate(data):
+                        errors_list.append(
+                            ErrorDetail(pointer=filter.id, detail=filter.message)
+                        )
+                except Exception as e:
+                    logger.opt(exception=True).debug(
+                        "Failed to evaluate CQL2 rule '{}'", filter.id
                     )
+                    raise Cql2EvaluationError(
+                        f"Could not evaluate rule '{filter.id}'"
+                    ) from e
 
         if errors_list:
             return BusinessRuleViolation(errors=errors_list)

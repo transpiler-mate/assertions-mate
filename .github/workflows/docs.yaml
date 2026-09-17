@@ -13,6 +13,9 @@
 # limitations under the License.
 
 name: docs
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -37,7 +40,5 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: 3.12
-      - run: pip install "mkdocs<=2.0.0" mkdocs-material mkdocs-mermaid2-plugin mkdocs-jupyter legacy-cgi pdocs mkdocs-build-plantuml-plugin
-      #- run: pip install .
-      #- run: pdocs as_markdown --output_dir ./docs/api/latest --exclude_source --overwrite assertions_mate
+      - run: pip install "mkdocs<=2.0.0" mkdocs-material mkdocs-mermaid2-plugin mkdocs-jupyter legacy-cgi mkdocstrings[python] mkdocs-build-plantuml-plugin
       - run: mkdocs gh-deploy --force
