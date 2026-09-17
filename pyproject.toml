@@ -35,10 +35,6 @@ dependencies = [
   "transpiler-mate-api==1.0.0",
 ]
 
-# TODO remove me as soon as transpiler-mate-api is on PyPI
-[tool.hatch.metadata]
-allow-direct-references = true
-
 [project.urls]
 Documentation = "https://terradue.github.io/assertions-mate/"
 Issues = "https://github.com/Terradue/assertions-mate/issues"
