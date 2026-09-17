@@ -58,7 +58,6 @@ class Cql2EvaluationError(RuntimeError):
     """A rule could not be evaluated, rather than evaluating to false."""
 
 
-
 class Cql2Validator(BaseValidator):
     """Validate workflow inputs with CQL2 predicates and optional Python functions."""
 
