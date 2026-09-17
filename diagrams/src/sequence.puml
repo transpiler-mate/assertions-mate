@@ -1,0 +1,52 @@
+@startuml
+participant "Client" as client
+collections "OGC API - Processes\nKNatice Service" as exec
+participant "execute\nFastAPI Micro Service" as fams
+participant "JSON Schema validator" as json_schema
+participant "Rego Policy Validator" as rego_policy
+participant "CQL2-Text Validator" as cql2_filter
+
+activate client
+
+client -> exec ++ : POST /{namespace}/processes/{processId}/execution\n\n{\n  "inputs": {},\n  "outputs": {},\n  "subscriber": {},\n"  properties": { }\n}
+exec -> fams ++ : Forward
+
+fams -> json_schema ++ : Validate inputs
+
+alt Inputs valid according to JSON Schema
+    json_schema --> fams : No violations detected
+    
+    fams -> rego_policy ++ : Validate inputs
+    
+    alt Inputs valid according to Rego Policy
+        rego_policy --> fams : No violations detected
+        
+        fams -> cql2_filter ++ : Validate inputs
+        
+        alt Inputs valid according to CQL2-Text filters
+            cql2_filter --> fams : No violations detected
+        else CQL2-Text filters input validation failed
+            cql2_filter --> fams : return "Business Rule Violation"
+            deactivate cql2_filter
+    
+            fams --> exec : return "https://problems-registry.smartbear.com/business-rule-violation/"
+            exec --> client : 400 Bad Request\nContent-Type: application/problem+json\n\n{\n  "type": "https://problems-registry.smartbear.com/business-rule-violation",\n  "title": "Business Rule Violation",\n  "detail": "The request body is invalid and not meeting business rules.",\n  "status": 422\n}
+        end
+    else Rego Policy input validation failed
+        rego_policy --> fams : return "Business Rule Violation"
+        deactivate rego_policy
+    
+        fams --> exec : return "https://problems-registry.smartbear.com/business-rule-violation/"
+        exec --> client : 400 Bad Request\nContent-Type: application/problem+json\n\n{\n  "type": "https://problems-registry.smartbear.com/business-rule-violation",\n  "title": "Business Rule Violation",\n  "detail": "The request body is invalid and not meeting business rules.",\n  "status": 422\n}
+    end
+else JSON Schema input validation failed
+    json_schema --> fams : return "Invalid Body Property Format"
+    deactivate json_schema
+    
+    fams --> exec : return "https://problems-registry.smartbear.com/invalid-body-property-format/"
+    deactivate fams
+    
+    exec --> client : 400 Bad Request\nContent-Type: application/problem+json\n\n{\n  "type": "https://problems-registry.smartbear.com/invalid-body-property-format",\n  "title": "Invalid Body Property Format",\n  "detail": "The request body contains a malformed property.",\n  "status": 400\n}
+end
+
+@enduml

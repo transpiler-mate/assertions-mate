@@ -1,0 +1,35 @@
+@startuml
+start
+:Client sent the inputs set;
+:Retrieve the workflow;
+:Retrieve the inputs JSON Schema by annotation;
+:JSON Schema inputs validation;
+if (JSON Schema valid?) then (yes)
+  :Retrieve the inputs Rego Policy by annotation;
+  if (Rego Policy passed?) then (yes)
+      if (Are STAC Item(s) input(s) passed by value?) then (yes)
+      
+      else (no)
+        :Resolve STAC Item(s) input(s) by reference;
+      endif
+      
+      :Retrieve the inputs CQL2 filters by annotation;
+      
+      if (CQL2 filters passed?) then (yes)
+      
+      else (no)
+        :Return 400 Bad Request comforming to RFC9457;
+        stop
+      endif
+    else (no)
+      :Return 400 Bad Request comforming to RFC9457;
+      stop
+    endif
+else (no)
+  :Return 400 Bad Request comforming to RFC9457;
+  stop
+endif
+
+:Submit Worflow execution; 
+end
+@enduml
