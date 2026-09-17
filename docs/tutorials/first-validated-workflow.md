@@ -65,10 +65,16 @@ count: 3
 Run:
 
 ```bash
-assertions-mate workflow.cwl --inputs inputs-valid.yaml
+transpiler-mate assertions-mate --inputs inputs-valid.yaml workflow.cwl
 ```
 
 Expected result: validators complete with no violations.
+
+!!! Release note
+
+    Since release **0.10.0**, `assertions-mate` is a transpiler-mate plugin.
+    The standalone command was removed; use `transpiler-mate assertions-mate`.
+    The Python library remains available.
 
 ## 3. Create Invalid Inputs
 
@@ -81,7 +87,7 @@ count: 42
 Run:
 
 ```bash
-assertions-mate workflow.cwl --inputs inputs-invalid.yaml
+transpiler-mate assertions-mate --inputs inputs-invalid.yaml workflow.cwl
 ```
 
 Expected result: Rego rule violation (`count must be <= 10`).
