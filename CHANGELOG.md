@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-## [0.9.0] - 2027-07-31
+## [0.9.0] - 2026-07-31
 
 ### Added
 
@@ -38,13 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `PyYAML` replaced by `ruamel.yaml` already used by `cwl-utils`. 
 
-## [0.8.0] - 2027-07-21
+## [0.8.0] - 2026-07-21
 
 ### Changed
 
 - `eoap-problems-registry` dependency version bump.
 
-## [0.7.0] - 2027-07-20
+## [0.7.0] - 2026-07-20
 
 ### Changed
 
