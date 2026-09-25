@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from http import HTTPStatus
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 from cwl_utils.parser import load_document_by_uri
+from cwl_utils.parser.cwl_v1_2 import Workflow
 from ruamel.yaml import YAML
 from transpiler_mate.api import PluginFailureError
 
@@ -25,7 +26,7 @@ from assertions_mate.cql2_validator import Cql2EvaluationError, Cql2Validator
 from assertions_mate.plugin import _scan_workflow
 
 
-def test_validate_inputs_reports_business_rule_violation_when_predicate_fails():
+def test_validate_inputs_reports_business_rule_violation_when_predicate_fails() -> None:
     validator = Cql2Validator(
         queries=[
             Cql2Query(
@@ -39,14 +40,14 @@ def test_validate_inputs_reports_business_rule_violation_when_predicate_fails():
     result = validator.validate_inputs({"count": 2})
 
     assert result is not None
-    assert result.status == 422
+    assert result.model_dump()["status"] == HTTPStatus.UNPROCESSABLE_ENTITY
     assert result.errors is not None
     assert len(result.errors) == 1
     assert result.errors[0].pointer == "rule-1"
     assert result.errors[0].detail == "Count must be greater than 5"
 
 
-def test_validate_inputs_reports_unrecognized_filter_format():
+def test_validate_inputs_reports_unrecognized_filter_format() -> None:
     validator = Cql2Validator(
         queries=[
             Cql2Query.model_construct(
@@ -66,21 +67,15 @@ def test_validate_inputs_reports_unrecognized_filter_format():
     assert "unrecognizible format" in result.errors[0].detail
 
 
-def test_validate_inputs_executes_ensure_bbox_custom_function_from_cwl_hint():
-    example_dir = (
-        Path(__file__).resolve().parents[1] / "examples" / "bbox-overlap-validation"
-    )
+def test_validate_inputs_executes_ensure_bbox_custom_function_from_cwl_hint() -> None:
+    example_dir = Path(__file__).resolve().parents[1] / "examples" / "bbox-overlap-validation"
     workflow = load_document_by_uri(
         path=example_dir / "workflow.cwl",
         load_all=True,
     )
     if isinstance(workflow, list):
         workflow = workflow[0]
-    hints = [
-        hint
-        for hint in extract_assertion_hints(workflow)
-        if isinstance(hint, Cql2FilterHint)
-    ]
+    hints = [hint for hint in extract_assertion_hints(workflow) if isinstance(hint, Cql2FilterHint)]
 
     assert len(hints) == 1
     assert hints[0].custom_functions is not None
@@ -101,7 +96,7 @@ def test_validate_inputs_executes_ensure_bbox_custom_function_from_cwl_hint():
     result = validator.validate_inputs(invalid_inputs)
 
     assert result is not None
-    assert result.status == 422
+    assert result.model_dump()["status"] == HTTPStatus.UNPROCESSABLE_ENTITY
     assert result.errors is not None
     assert len(result.errors) == 1
     assert result.errors[0].pointer == "bbox-overlap"
@@ -109,16 +104,15 @@ def test_validate_inputs_executes_ensure_bbox_custom_function_from_cwl_hint():
 
 
 @pytest.mark.parametrize("data", [{}, {"aoi": None}])
-def test_polygon_missing_aoi_reports_only_presence_violation(data):
-    path = (
-        Path(__file__).resolve().parents[1] / "examples/polygon-validation/workflow.cwl"
-    )
+def test_polygon_missing_aoi_reports_only_presence_violation(data: dict[str, object]) -> None:
+    path = Path(__file__).resolve().parents[1] / "examples/polygon-validation/workflow.cwl"
     workflow = YAML().load(path)["$graph"][0]
     hint = Cql2FilterHint(**workflow["hints"][0])
 
     result = hint.validator().validate_inputs(data)
 
     assert result is not None
+    assert result.errors is not None
     assert [(error.pointer, error.detail) for error in result.errors] == [
         ("aoi-present", "aoi must be provided")
     ]
@@ -135,24 +129,25 @@ def test_polygon_missing_aoi_reports_only_presence_violation(data):
         ({"aoi": {"type": "Polygon"}}, ["aoi.bbox must be provided"]),
     ],
 )
-def test_polygon_non_null_rules_still_validate(data, expected):
-    path = (
-        Path(__file__).resolve().parents[1] / "examples/polygon-validation/workflow.cwl"
-    )
+def test_polygon_non_null_rules_still_validate(
+    data: dict[str, object], expected: list[str]
+) -> None:
+    path = Path(__file__).resolve().parents[1] / "examples/polygon-validation/workflow.cwl"
     hint = Cql2FilterHint(**YAML().load(path)["$graph"][0]["hints"][0])
 
     result = hint.validator().validate_inputs(data)
 
-    assert ([error.detail for error in result.errors] if result else []) == expected
+    if expected:
+        assert result is not None
+        assert result.errors is not None
+        assert [error.detail for error in result.errors] == expected
+    else:
+        assert result is None
 
 
-def test_custom_function_failure_is_not_a_business_rule_violation():
+def test_custom_function_failure_is_not_a_business_rule_violation() -> None:
     validator = Cql2Validator(
-        queries=[
-            Cql2Query(
-                id="broken-rule", cql2="broken(count) = 1", message="Invalid count"
-            )
-        ],
+        queries=[Cql2Query(id="broken-rule", cql2="broken(count) = 1", message="Invalid count")],
         custom_functions="def broken(value):\n    raise ValueError('internal detail')",
     )
 
@@ -163,10 +158,12 @@ def test_custom_function_failure_is_not_a_business_rule_violation():
     assert isinstance(caught.value.__cause__, ValueError)
 
 
-def test_plugin_reports_evaluation_failure_without_success():
-    workflow = SimpleNamespace(
+def test_plugin_reports_evaluation_failure_without_success() -> None:
+    workflow = Workflow(
+        inputs=[],
+        outputs=[],
+        steps=[],
         id="file:///tmp/workflow.cwl#main",
-        class_="Workflow",
         cwlVersion="v1.2",
         hints=[
             {
@@ -182,7 +179,16 @@ def test_plugin_reports_evaluation_failure_without_success():
         ],
     )
 
-    with pytest.raises(
-        PluginFailureError, match="Could not evaluate rule 'broken-rule'"
-    ):
+    with pytest.raises(PluginFailureError, match="Could not evaluate rule 'broken-rule'"):
         _scan_workflow(workflow, {"aoi": None})
+
+
+@pytest.mark.parametrize("expression", ["count >", {"op": "unsupported", "args": []}])
+def test_malformed_rules_report_syntax_errors(expression: str | dict[str, object]) -> None:
+    validator = Cql2Validator(queries=[Cql2Query(id="invalid", cql2=expression, message="unused")])
+    result = validator.validate_inputs({"count": 1})
+    assert result is not None
+    assert result.errors is not None
+    assert len(result.errors) == 1
+    assert result.errors[0].pointer == "invalid"
+    assert "Filter does not look like a valid CQL2" in result.errors[0].detail

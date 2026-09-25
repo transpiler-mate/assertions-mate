@@ -15,7 +15,8 @@
 """Validate workflow inputs with JSON Schema Draft 2020-12 and remote references."""
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -32,6 +33,7 @@ from referencing import Resource
 from referencing.exceptions import NoSuchResource
 from referencing.jsonschema import DRAFT202012
 from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 
 from . import BaseValidator
 
@@ -114,21 +116,18 @@ class JSONSchemaRegistry:
             or self._schema_format_from_uri(uri)
             or "json"
         )
-        formats = [preferred_format] + [
-            candidate for candidate in ("json", "yaml") if candidate != preferred_format
-        ]
-
-        last_error: Exception | None = None
-        for schema_format in formats:
-            try:
-                if schema_format == "json":
-                    return json.loads(text)
-
-                return YAML().load(text)
-            except Exception as error:
-                last_error = error
-
-        raise ValueError(f"Unable to parse JSON Schema from {uri}") from last_error
+        parsers: tuple[Callable[[str], object], ...] = (json.loads, YAML().load)
+        if preferred_format == "yaml":
+            parsers = parsers[::-1]
+        preferred_parser, fallback_parser = parsers
+        try:
+            return preferred_parser(text)
+        except (ValueError, YAMLError):
+            pass
+        try:
+            return fallback_parser(text)
+        except (ValueError, YAMLError) as error:
+            raise ValueError(f"Unable to parse JSON Schema from {uri}") from error
 
     @staticmethod
     def _schema_request_uri(uri: str) -> str:
@@ -174,7 +173,7 @@ class JSONSchemaRegistry:
         except requests.exceptions.InvalidSchema as error:
             raise NoSuchResource(uri) from error
 
-        if response.status_code == 404:
+        if response.status_code == HTTPStatus.NOT_FOUND.value:
             raise NoSuchResource(uri)
 
         response.raise_for_status()

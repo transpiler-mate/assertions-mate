@@ -94,7 +94,10 @@ class JSONSchemaHint(AssertionHint):
         """Return the explicit schema, or derive it from the parent CWL process."""
         if "json_schema" in self.model_fields_set or self.parent_workflow is None:
             return self.json_schema
-        return BaseCWLtypes2OGCConverter(self.parent_workflow).get_inputs_json_schema()
+        schema = BaseCWLtypes2OGCConverter(self.parent_workflow).get_inputs_json_schema()
+        if not isinstance(schema, Mapping):
+            raise TypeError("The CWL converter must return a JSON Schema mapping")
+        return schema
 
     @model_serializer
     def ser_model(self) -> Mapping[str, Any]:
@@ -186,9 +189,7 @@ class Cql2FilterHint(AssertionHint):
         """Create a CQL2 validator with the configured queries and custom functions."""
         from .cql2_validator import Cql2Validator
 
-        return Cql2Validator(
-            custom_functions=self.custom_functions, queries=self.queries
-        )
+        return Cql2Validator(custom_functions=self.custom_functions, queries=self.queries)
 
 
 def _get_assertion_hint_by_name(
@@ -218,7 +219,8 @@ def _get_assertion_hint_by_name(
 
         try:
             hint_kind = globals()[hint_kind_name]
-            return hint_kind(parent_workflow=parent_workflow, **hint)
+            if isinstance(hint_kind, type) and issubclass(hint_kind, AssertionHint):
+                return hint_kind(parent_workflow=parent_workflow, **hint)
         except Exception as e:
             logger.error(
                 f"An error occurred while mapping {fqn_hint_kind} to {AssertionHint.__name__}: {e}"
@@ -245,9 +247,7 @@ def extract_assertion_hints(workflow: Any) -> list[AssertionHint]:
     if workflow.hints:
         for hint in workflow.hints:
             if isinstance(hint, dict):
-                hint_instance = _get_assertion_hint_by_name(
-                    parent_workflow=workflow, hint=hint
-                )
+                hint_instance = _get_assertion_hint_by_name(parent_workflow=workflow, hint=hint)
 
                 if hint_instance:
                     assertion_hints.append(hint_instance)

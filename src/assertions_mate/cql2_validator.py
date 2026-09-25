@@ -40,17 +40,17 @@ from . import BaseValidator, Cql2Query
 def _to_builtin(value: Any) -> Any:
     """Normalize YAML scalar wrappers to plain Python types."""
     if isinstance(value, Mapping):
-        return {str(k): _to_builtin(v) for k, v in value.items()}
+        return {str(key): _to_builtin(item) for key, item in value.items()}
     if isinstance(value, list):
-        return [_to_builtin(v) for v in value]
+        return [_to_builtin(item) for item in value]
     if isinstance(value, bool):
-        return bool(value)
-    if isinstance(value, str):
-        return str(value)
-    if isinstance(value, Integral):
-        return int(value)
-    if isinstance(value, Real):
-        return float(value)
+        value = bool(value)
+    elif isinstance(value, str):
+        value = str(value)
+    elif isinstance(value, Integral):
+        value = int(value)
+    elif isinstance(value, Real):
+        value = float(value)
     return value
 
 
@@ -61,7 +61,7 @@ class Cql2EvaluationError(RuntimeError):
 class Cql2Validator(BaseValidator):
     """Validate workflow inputs with CQL2 predicates and optional Python functions."""
 
-    def __init__(self, queries: list[Cql2Query], custom_functions: str | None = None):
+    def __init__(self, queries: list[Cql2Query], custom_functions: str | None = None) -> None:
         """Initialize the native evaluator and retain the configured queries.
 
         Args:
@@ -96,54 +96,61 @@ class Cql2Validator(BaseValidator):
         """
         errors_list = []
 
-        for filter in self.queries:
-            ast = None
-
-            if isinstance(filter.cql2, str):
-                try:
-                    ast = parse_cql2_text(filter.cql2)
-                except Exception as e:
-                    errors_list.append(
-                        ErrorDetail(
-                            pointer=filter.id,
-                            detail=f"Filter does not look like a valid CQL2 Text encoded sentece: {e}",
-                        )
-                    )
-            elif isinstance(filter.cql2, dict):
-                try:
-                    ast = parse_cql2_json(_to_builtin(filter.cql2))
-                except Exception as e:
-                    errors_list.append(
-                        ErrorDetail(
-                            pointer=filter.id,
-                            detail=f"Filter does not look like a valid CQL2 JSON encoded structure: {e}",
-                        )
-                    )
-            else:
-                errors_list.append(
-                    ErrorDetail(
-                        pointer=filter.id,
-                        detail=f"Filter is expressed in an unrecognizible format: {type(filter.cql2)}",
-                    )
-                )
-
-            if ast:
-                try:
-                    predicate = self.evaluator.evaluate(ast)
-
-                    if not predicate(data):
-                        errors_list.append(
-                            ErrorDetail(pointer=filter.id, detail=filter.message)
-                        )
-                except Exception as e:
-                    logger.opt(exception=True).debug(
-                        "Failed to evaluate CQL2 rule '{}'", filter.id
-                    )
-                    raise Cql2EvaluationError(
-                        f"Could not evaluate rule '{filter.id}'"
-                    ) from e
+        for query in self.queries:
+            errors_list.extend(self._validate_query(query, data))
 
         if errors_list:
             return BusinessRuleViolation(errors=errors_list)
 
         return None
+
+    def _validate_query(self, query: Cql2Query, data: Mapping[str, Any]) -> list[ErrorDetail]:
+        """Parse and evaluate one rule, returning its validation errors.
+
+        Raises:
+            Cql2EvaluationError: If compilation or predicate execution fails.
+        """
+        errors_list = []
+        ast = None
+
+        if isinstance(query.cql2, str):
+            try:
+                ast = parse_cql2_text(query.cql2)
+            except Exception as error:
+                errors_list.append(
+                    ErrorDetail(
+                        pointer=query.id,
+                        detail=f"Filter does not look like a valid CQL2 Text encoded sentece: {error}",
+                    )
+                )
+        elif isinstance(query.cql2, dict):
+            try:
+                ast = parse_cql2_json(_to_builtin(query.cql2))
+            except Exception as error:
+                errors_list.append(
+                    ErrorDetail(
+                        pointer=query.id,
+                        detail=f"Filter does not look like a valid CQL2 JSON encoded structure: {error}",
+                    )
+                )
+        else:
+            errors_list.append(
+                ErrorDetail(
+                    pointer=query.id,
+                    detail=f"Filter is expressed in an unrecognizible format: {type(query.cql2)}",
+                )
+            )
+
+        if ast and not self._evaluate_predicate(ast, data, query.id):
+            errors_list.append(ErrorDetail(pointer=query.id, detail=query.message))
+
+        return errors_list
+
+    def _evaluate_predicate(self, ast: object, data: Mapping[str, Any], rule_id: str) -> bool:
+        """Evaluate a parsed rule, wrapping evaluator failures with its identifier."""
+        try:
+            predicate = self.evaluator.evaluate(ast)
+            return bool(predicate(data))
+        except Exception as error:
+            logger.opt(exception=True).debug("Failed to evaluate CQL2 rule '{}'", rule_id)
+            raise Cql2EvaluationError(f"Could not evaluate rule '{rule_id}'") from error
