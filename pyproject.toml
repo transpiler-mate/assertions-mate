@@ -112,7 +112,7 @@ omit = [
 [tool.coverage.paths]
 assertions_mate = [
   "src/assertions_mate",
-  "*/{{ project_slug }}/src/assertions_mate"
+  "*/assertions-mate/src/assertions_mate"
 ]
 
 [tool.coverage.report]
