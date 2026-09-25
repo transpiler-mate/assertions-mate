@@ -2,6 +2,8 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/assertions-mate.svg)](https://pypi.org/project/assertions-mate)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/assertions-mate.svg)](https://pypi.org/project/assertions-mate)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/transpiler-mate/assertions-mate/package.yaml?branch=develop&event=push&label=build&logo=githubactions)](https://github.com/transpiler-mate/assertions-mate/actions/workflows/package.yaml?query=branch%3Adevelop)
+[![Code coverage](https://img.shields.io/codecov/c/github/transpiler-mate/assertions-mate/develop?logo=codecov)](https://app.codecov.io/gh/transpiler-mate/assertions-mate/tree/develop)
 
 `assertions-mate` validates CWL workflow inputs against assertion hints embedded in the workflow definition.
 
