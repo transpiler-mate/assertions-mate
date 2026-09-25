@@ -18,14 +18,16 @@ from assertions_mate import Cql2FilterHint, JSONSchemaHint, extract_assertion_hi
 
 
 class DummyWorkflow:
-    def __init__(self, hints):
+    """Provide CWL metadata and arbitrary hints for extraction tests."""
+
+    def __init__(self, hints: list[object]) -> None:
         self.id = "file:///tmp/workflow.cwl#main"
         self.class_ = "Workflow"
         self.cwlVersion = "v1.2"
         self.hints = hints
 
 
-def test_extract_assertion_hints_maps_supported_hint_types():
+def test_extract_assertion_hints_maps_supported_hint_types() -> None:
     workflow = DummyWorkflow(
         hints=[
             {
@@ -47,12 +49,10 @@ def test_extract_assertion_hints_maps_supported_hint_types():
 
     hints = extract_assertion_hints(workflow)
 
-    assert len(hints) == 2
-    assert isinstance(hints[0], JSONSchemaHint)
-    assert isinstance(hints[1], Cql2FilterHint)
+    assert [type(hint) for hint in hints] == [JSONSchemaHint, Cql2FilterHint]
 
 
-def test_extract_assertion_hints_ignores_unknown_or_non_mapping_hints():
+def test_extract_assertion_hints_ignores_unknown_or_non_mapping_hints() -> None:
     workflow = DummyWorkflow(
         hints=[
             {"class": "eoap:DoesNotExistHint"},
@@ -65,14 +65,12 @@ def test_extract_assertion_hints_ignores_unknown_or_non_mapping_hints():
     assert hints == []
 
 
-def test_explicit_json_schema_is_used_with_parent_workflow():
+def test_explicit_json_schema_is_used_with_parent_workflow() -> None:
     schema = {
         "type": "object",
         "properties": {"count": {"type": "integer", "minimum": 1}},
     }
-    workflow = DummyWorkflow(
-        hints=[{"class": "eoap:JSONSchemaHint", "json_schema": schema}]
-    )
+    workflow = DummyWorkflow(hints=[{"class": "eoap:JSONSchemaHint", "json_schema": schema}])
     hint = extract_assertion_hints(workflow)[0]
 
     assert hint.model_dump() == schema
@@ -80,25 +78,22 @@ def test_explicit_json_schema_is_used_with_parent_workflow():
     assert validator.validate_inputs({"count": 1}) is None
     result = validator.validate_inputs({"count": 0})
     assert result is not None
+    assert result.errors is not None
     assert "minimum" in result.errors[0].detail
 
 
-def test_explicit_empty_json_schema_is_preserved():
+def test_explicit_empty_json_schema_is_preserved() -> None:
     hint = JSONSchemaHint(parent_workflow=DummyWorkflow([]), json_schema={})
 
     assert hint.model_dump() == {}
     assert hint.validator().validate_inputs({"anything": None}) is None
 
 
-def test_missing_json_schema_is_generated_from_workflow():
+def test_missing_json_schema_is_generated_from_workflow() -> None:
     workflow = Workflow(
         id="file:///tmp/workflow.cwl#main",
         cwlVersion="v1.2",
-        inputs=[
-            WorkflowInputParameter(
-                id="file:///tmp/workflow.cwl#main/count", type_="int"
-            )
-        ],
+        inputs=[WorkflowInputParameter(id="file:///tmp/workflow.cwl#main/count", type_="int")],
         outputs=[],
         steps=[],
     )
@@ -110,7 +105,7 @@ def test_missing_json_schema_is_generated_from_workflow():
     assert validator.validate_inputs({"count": "wrong"}) is not None
 
 
-def test_missing_json_schema_without_workflow_accepts_any_object():
+def test_missing_json_schema_without_workflow_accepts_any_object() -> None:
     hint = JSONSchemaHint()
 
     assert hint.model_dump() == {}

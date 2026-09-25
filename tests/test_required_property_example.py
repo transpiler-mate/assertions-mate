@@ -19,13 +19,11 @@ from ruamel.yaml import YAML
 
 from assertions_mate.rego_validator import RegoValidator
 
-EXAMPLE_DIR = (
-    Path(__file__).resolve().parents[1] / "examples/required-property-validation"
-)
+EXAMPLE_DIR = Path(__file__).resolve().parents[1] / "examples/required-property-validation"
 
 
 @pytest.fixture
-def validator():
+def validator() -> RegoValidator:
     workflow = YAML().load(EXAMPLE_DIR / "workflow.cwl")
     hint = workflow["$graph"][0]["hints"][0]
     return RegoValidator(module=hint["module"], queries=hint["queries"])
@@ -42,24 +40,26 @@ def validator():
         {"aoi": {"properties": {"name": None}}},
     ],
 )
-def test_missing_or_null_name_is_rejected(validator, data):
+def test_missing_or_null_name_is_rejected(
+    validator: RegoValidator, data: dict[str, object]
+) -> None:
     result = validator.validate_inputs(data)
 
     assert result is not None
-    assert any(
-        "aoi.properties.name must be provided" in error.detail
-        for error in result.errors
-    )
+    assert result.errors is not None
+    assert any("aoi.properties.name must be provided" in error.detail for error in result.errors)
 
 
 @pytest.mark.parametrize("name", ["my-aoi", "", False, 0])
-def test_present_non_null_name_is_accepted(validator, name):
+def test_present_non_null_name_is_accepted(
+    validator: RegoValidator, name: str | bool | int
+) -> None:
     # This rule checks presence, not the value's type or truthiness.
     assert validator.validate_inputs({"aoi": {"properties": {"name": name}}}) is None
 
 
 @pytest.mark.parametrize("kind, rejected", [("valid", False), ("invalid", True)])
-def test_example_fixtures(validator, kind, rejected):
+def test_example_fixtures(validator: RegoValidator, kind: str, rejected: bool) -> None:
     data = YAML().load(EXAMPLE_DIR / f"inputs-{kind}.yaml")
 
     assert (validator.validate_inputs(data) is not None) == rejected

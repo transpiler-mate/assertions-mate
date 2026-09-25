@@ -21,14 +21,16 @@ from assertions_mate import (
 
 
 class DummyWorkflow:
-    def __init__(self, hints):
+    """Provide CWL metadata and arbitrary hints for extraction tests."""
+
+    def __init__(self, hints: list[object]) -> None:
         self.id = "file:///tmp/workflow.cwl#main"
         self.class_ = "Workflow"
         self.cwlVersion = "v1.2"
         self.hints = hints
 
 
-def test_extract_assertion_hints_maps_multi_hint_workflow_from_howto():
+def test_extract_assertion_hints_maps_multi_hint_workflow_from_howto() -> None:
     workflow = DummyWorkflow(
         hints=[
             {
@@ -66,13 +68,10 @@ def test_extract_assertion_hints_maps_multi_hint_workflow_from_howto():
 
     hints = extract_assertion_hints(workflow)
 
-    assert len(hints) == 3
-    assert isinstance(hints[0], JSONSchemaHint)
-    assert isinstance(hints[1], RegoPolicyHint)
-    assert isinstance(hints[2], Cql2FilterHint)
+    assert [type(hint) for hint in hints] == [JSONSchemaHint, RegoPolicyHint, Cql2FilterHint]
 
 
-def test_extract_assertion_hints_maps_uri_host_rego_hint_from_howto():
+def test_extract_assertion_hints_maps_uri_host_rego_hint_from_howto() -> None:
     workflow = DummyWorkflow(
         hints=[
             {

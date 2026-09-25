@@ -27,7 +27,7 @@ from . import BaseValidator
 class RegoValidator(BaseValidator):
     """Run Rego queries and collect their returned expressions as violations."""
 
-    def __init__(self, module: str, queries: list[str]):
+    def __init__(self, module: str, queries: list[str]) -> None:
         """Load a policy module into a Rego interpreter.
 
         Args:
@@ -53,7 +53,7 @@ class RegoValidator(BaseValidator):
 
         Interpreter errors propagate to the caller.
         """
-        errors_list = []
+        errors_list: list[ErrorDetail] = []
 
         self.rego.set_input(Input(data))
 
@@ -64,8 +64,7 @@ class RegoValidator(BaseValidator):
                 if not exprs:  # safety check
                     continue
 
-                for expr in exprs:
-                    errors_list.append(ErrorDetail(pointer=query, detail=str(expr)))
+                errors_list.extend(ErrorDetail(pointer=query, detail=str(expr)) for expr in exprs)
 
         if errors_list:
             return BusinessRuleViolation(errors=errors_list)

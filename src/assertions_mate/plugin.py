@@ -28,7 +28,7 @@ from transpiler_mate.api import (
     transpiler_plugin,
 )
 
-from . import extract_assertion_hints
+from . import BaseValidator, extract_assertion_hints
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -53,7 +53,7 @@ class AssertionsMateOptions(BaseModel):
     ]
 
 
-def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
+def _scan_workflow(wf: Process, inputs: Mapping[str, Any]) -> None:
     """Build a process's hint validators and log their validation results.
 
     Args:
@@ -66,9 +66,7 @@ def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
     Validator construction failures are logged and skipped. Returned violations
     are logged as warnings and do not raise an exception.
     """
-    logger.info(
-        "------------------------------------------------------------------------"
-    )
+    logger.info("------------------------------------------------------------------------")
     workflow_id = wf.id.split("#")[-1]
     logger.info(f"Validating #{workflow_id} {wf.class_} ({wf.cwlVersion}):")
 
@@ -81,35 +79,32 @@ def _scan_workflow(wf: Process, inputs: Mapping[str, Any]):
         try:
             validators.append(hint_instance.validator())
         except Exception as e:
-            logger.error(
-                f"An error occurred when setting up {type(hint_instance).__name__}: {e}"
-            )
+            logger.error(f"An error occurred when setting up {type(hint_instance).__name__}: {e}")
 
     if validators:
         logger.info("Setup is over, validating...")
 
         for validator in validators:
-            logger.info(f"  - Executing {type(validator).__name__}...")
-
-            try:
-                problem_details = validator.validate_inputs(inputs)
-            except Exception as exc:
-                raise PluginFailureError(str(exc)) from exc
-            if problem_details:
-                logger.warning(
-                    f"    {type(validator).__name__} detected violations below:"
-                )
-
-                for error_detail in problem_details.errors or []:
-                    logger.warning(
-                        f"    [{error_detail.pointer}] {error_detail.detail}"
-                    )
-            else:
-                logger.info(
-                    f"    {type(validator).__name__} execution terminated with no violations"
-                )
+            _validate_inputs(validator, inputs)
     else:
         logger.info(f"No Validators configured in '#{workflow_id}.hints'")
+
+
+def _validate_inputs(validator: BaseValidator, inputs: Mapping[str, Any]) -> None:
+    """Log validation results, wrapping execution failures as plugin errors."""
+    logger.info(f"  - Executing {type(validator).__name__}...")
+
+    try:
+        problem_details = validator.validate_inputs(inputs)
+    except Exception as exc:
+        raise PluginFailureError(str(exc)) from exc
+    if problem_details:
+        logger.warning(f"    {type(validator).__name__} detected violations below:")
+
+        for error_detail in problem_details.errors or []:
+            logger.warning(f"    [{error_detail.pointer}] {error_detail.detail}")
+    else:
+        logger.info(f"    {type(validator).__name__} execution terminated with no violations")
 
 
 @transpiler_plugin(
