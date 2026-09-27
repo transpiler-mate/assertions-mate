@@ -1,0 +1,81 @@
+@startuml
+package models {
+    struct ErrorDetail {
+        +detail: str
+        +pointer: str
+        +parameter: str
+        +header: str
+        +code: str
+    }
+    
+    struct ProblemDetails {
+        +type: str
+        +status: int
+        +title: str
+        +detail: str
+        +instance: str
+        +code: str
+        +errors: List[ErrorDetail]
+    }
+
+    ErrorDetail o-r- ProblemDetails
+    /'
+    struct BusinessRuleViolation extends ProblemDetails
+    struct AlreadyExists extends ProblemDetails
+    struct BadRequest extends ProblemDetails
+    struct BusinessRuleViolation extends ProblemDetails
+    struct Forbidden extends ProblemDetails
+    struct InvalidBodyPropertyFormat extends ProblemDetails
+    struct InvalidBodyPropertyValue extends ProblemDetails
+    struct InvalidParameters extends ProblemDetails
+    struct InvalidRequestHeaderFormat extends ProblemDetails
+    struct InvalidRequestParameterFormat extends ProblemDetails
+    struct InvalidRequestParameterValue extends ProblemDetails
+    struct LicenseCancelled extends ProblemDetails
+    struct LicenseExpired extends ProblemDetails
+    struct MissingBodyProperty extends ProblemDetails
+    struct MissingRequestHeader extends ProblemDetails
+    struct MissingRequestParameter extends ProblemDetails
+    struct NotFound extends ProblemDetails
+    struct ServerError extends ProblemDetails
+    struct ServiceUnavailable extends ProblemDetails
+    struct Unauthorized extends ProblemDetails
+    struct ValidationError extends ProblemDetails
+    '/
+}
+
+abstract class BaseValidator {
+    +validate_inputs(data: Mapping[str, Any]) -> ProblemDetails | None
+}
+
+abstract class AssertionHint {
+  +validator() -> BaseValidator
+}
+
+class JSONSchemaHint extends AssertionHint {
+  +validator() -> BaseValidator
+}
+
+class RegoPolicyHint extends AssertionHint {
+  +validator() -> BaseValidator
+}
+
+class Cql2FilterHint extends AssertionHint {
+  +validator() -> BaseValidator
+}
+
+BaseValidator -u-> ProblemDetails
+AssertionHint -> BaseValidator
+
+class JSONSchemaValidator extends BaseValidator {
+    +validate_inputs(data: Mapping[str, Any]) -> ProblemDetails | None
+}
+
+class RegoValidator extends BaseValidator {
+    +validate_inputs(data: Mapping[str, Any]) -> ProblemDetails | None
+}
+
+class Cql2Validator extends BaseValidator {
+    +validate_inputs(data: Mapping[str, Any]) -> ProblemDetails | None
+}
+@enduml
