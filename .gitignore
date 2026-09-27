@@ -19,3 +19,4 @@ src/assertions_mate/__pycache__
 .mypy_cache
 uv.lock
 .cache
+dist/

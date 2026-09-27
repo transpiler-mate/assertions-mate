@@ -46,14 +46,14 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "cwl2ogc>=0.20.0",
+  "cwl2ogc>=0.22.1",
   "jsonschema==4.26.0",
   "loguru==0.7.3",
   "pygeofilter[backend-native]>=0.4.0,<1",
   "regopy>=1.5.2",
   "requests>=2.34.2",
   "eoap-problems-registry>=1.5.0",
-  "transpiler-mate-api==1.0.0",
+  "transpiler-mate-api>=1.0.0",
 ]
 
 # ---------------------------------------------------------------------------
@@ -112,7 +112,7 @@ omit = [
 [tool.coverage.paths]
 assertions_mate = [
   "src/assertions_mate",
-  "*/{{ project_slug }}/src/assertions_mate"
+  "*/assertions-mate/src/assertions_mate"
 ]
 
 [tool.coverage.report]

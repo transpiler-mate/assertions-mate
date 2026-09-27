@@ -23,7 +23,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from typing import Any
 
-from cwl2ogc import BaseCWLtypes2OGCConverter  # type: ignore[import-untyped]
+from cwl2ogc import BaseCWLtypes2OGCConverter
 from eoap_problems_registry import ProblemDetails
 from loguru import logger
 from pydantic import BaseModel, computed_field, model_serializer
