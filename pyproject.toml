@@ -52,7 +52,7 @@ dependencies = [
   "pygeofilter[backend-native]>=0.4.0,<1",
   "regopy>=1.5.2",
   "requests>=2.34.2",
-  "eoap-problems-registry>=1.5.0",
+  "eoap-problems-registry>=1.7.0",
   "transpiler-mate-api>=1.0.0",
 ]
 
