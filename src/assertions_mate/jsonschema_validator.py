@@ -22,7 +22,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 import requests
-from eoap_problems_registry import (
+from http_apis_problems_detail import (
     ErrorDetail,
     InvalidBodyPropertyFormat,
     ProblemDetails,

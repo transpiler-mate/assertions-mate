@@ -13,7 +13,7 @@
 # limitations under the License.
 
 [build-system]
-requires = ["hatchling>=1.32.4"]
+requires = ["hatchling>=1.33.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -21,7 +21,7 @@ name = "assertions-mate"
 dynamic = ["version"]
 description = 'Input validation using JSON Schema, Rego policies, and CQL2 assertions embedded as CWL hints'
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 keywords = [
@@ -37,22 +37,22 @@ authors = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "cwl2ogc>=0.22.1",
+  "cwl2ogc>=0.22.2",
   "jsonschema==4.26.0",
   "loguru==0.7.3",
   "pygeofilter[backend-native]>=0.4.0,<1",
   "regopy>=1.5.2",
   "requests>=2.34.2",
-  "eoap-problems-registry>=1.5.0",
+  "http-apis-problems-detail>=2.0.0",
   "transpiler-mate-api>=1.0.0",
 ]
 
@@ -133,8 +133,8 @@ exclude_lines = [
 [tool.hatch.envs.test]
 skip-install = false
 dependencies = [
-  "pytest>=8.4,<10",
-  "pytest-cov>=6.2,<8",
+  "pytest>=9.2.0,<10",
+  "pytest-cov>=7.1.0,<8",
 ]
 
 [tool.hatch.envs.test.scripts]
@@ -144,7 +144,7 @@ test-cov = "pytest --cov=assertions_mate --cov-report=term-missing --cov-report=
 test-show-setup = "pytest --setup-show {args:tests}"
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+python = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 # ---------------------------------------------------------------------------
 # Pytest
@@ -171,7 +171,7 @@ dependencies = [
   "types-jsonschema>=4.26.0.20260518",
   "ruff>=0.16.0",
   "bandit>=1.9.4",
-  "pytest>=8.4,<10",
+  "pytest>=9.2.0,<10",
 ]
 
 # ---------------------------------------------------------------------------
@@ -322,6 +322,6 @@ check = [
 # Preserve editable-install test extras and uv's local wheel resolution.
 [project.optional-dependencies]
 test = [
-  "pytest>=8.4,<10",
-  "pytest-cov>=6.2,<8"
+  "pytest>=9.2.0,<10",
+  "pytest-cov>=7.1.0,<8"
 ]

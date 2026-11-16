@@ -7,13 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-16
+
 ### Added
+
+- `eoap-problem-registry` replaced by `http-apis-problems-detail`.
+
+
+
+- Added Python 3.15 support.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+### Changed
+
+- Removed Python 3.10 support.
 
 ## [0.10.1] - 2026-09-27
 
@@ -151,13 +163,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed documentation build issues around PlantUML and MkDocs plugin configuration.
 - Fixed API documentation generation and schema behavior according to canonical CWL practices.
 
-[Unreleased]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.10.1...develop
-[0.10.1]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.10.0...v0.10.1
-[0.10.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.9.0...v0.10.0
-[0.9.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.8.0...v0.9.0
-[0.8.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/Transpiler-Mate/assertions-mate/compare/v0.2.0...v0.4.0
-[0.2.0]: https://github.com/Transpiler-Mate/assertions-mate/releases/tag/v0.2.0
+[Unreleased]: https://github.com/Terradue/assertions-mate/compare/v0.11.0...develop
+[0.11.0]: https://github.com/Terradue/assertions-mate/compare/v0.10.1...v0.11.0
+[0.10.1]: https://github.com/Terradue/assertions-mate/compare/v0.10.0...v0.10.1
+[0.10.0]: https://github.com/Terradue/assertions-mate/compare/v0.9.0...v0.10.0
+[0.9.0]: https://github.com/Terradue/assertions-mate/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/Terradue/assertions-mate/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/Terradue/assertions-mate/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/Terradue/assertions-mate/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/Terradue/assertions-mate/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/Terradue/assertions-mate/compare/v0.2.0...v0.4.0
+[0.2.0]: https://github.com/Terradue/assertions-mate/releases/tag/v0.2.0

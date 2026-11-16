@@ -17,7 +17,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from eoap_problems_registry import BusinessRuleViolation, ErrorDetail, ProblemDetails
+from http_apis_problems_detail import BusinessRuleViolation, ErrorDetail, ProblemDetails
 from regopy import Interpreter  # type: ignore[import-untyped]
 from regopy.interpreter import Input  # type: ignore[import-untyped]
 

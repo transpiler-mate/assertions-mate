@@ -8,6 +8,11 @@ It supports three validation families:
 - Rego policy queries (OPA)
 - CQL2 filter expressions
 
+!!! warning "Python 3.10 no longer supported"
+
+   Python 3.10 reached end of life (EOL) on October 1, 2026.
+   `assertions-mate` requires Python 3.11 and above since release `0.11.0`.
+
 ## Start Here
 
 If you are new, follow this path:
