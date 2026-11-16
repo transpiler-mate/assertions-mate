@@ -18,7 +18,7 @@ from collections.abc import Mapping
 from numbers import Integral, Real
 from typing import Any
 
-from eoap_problems_registry import (
+from http_apis_problems_detail import (
     BusinessRuleViolation,
     ErrorDetail,
     ProblemDetails,
