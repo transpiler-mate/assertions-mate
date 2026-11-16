@@ -48,7 +48,7 @@ classifiers = [
 dependencies = [
   "cwl2ogc>=0.22.2",
   "jsonschema==4.26.0",
-  "loguru==0.7.3",
+  "loguru==0.8.0",
   "pygeofilter[backend-native]>=0.4.0,<1",
   "regopy>=1.5.2",
   "requests>=2.34.2",
